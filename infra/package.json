@@ -1,0 +1,27 @@
+{
+  "name": "flappy-kiro-infra",
+  "version": "1.0.0",
+  "description": "CDK stack: CodeCommit repo seeded with the Flappy Kiro app, fronted by an Amplify app with auto build/deploy.",
+  "private": true,
+  "bin": {
+    "flappy-kiro-infra": "bin/flappy-kiro-infra.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "synth": "cdk synth",
+    "deploy": "cdk deploy",
+    "destroy": "cdk destroy",
+    "diff": "cdk diff"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "aws-cdk": "^2.173.0",
+    "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "@aws-cdk/aws-amplify-alpha": "^2.173.0-alpha.0",
+    "aws-cdk-lib": "^2.173.0",
+    "constructs": "^10.4.2"
+  }
+}
