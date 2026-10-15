@@ -47,7 +47,7 @@ import {
   needsSpawn,
 } from './pipeManager.js';
 import { ghostHitsPipe, ghostHitsBounds } from './collision.js';
-import { createCoin, advanceCoins, collectCoins, cullCoins } from './coin.js';
+import { createCoinAt, advanceCoins, collectCoins, cullCoins } from './coin.js';
 import { scorePasses, nextHighScore } from './score.js';
 import { advanceClouds, createClouds } from './background.js';
 import {
@@ -250,8 +250,13 @@ export function createGame(deps = {}) {
       );
       const newPipe = spawnPipe(rng, playArea, lastPipeX);
       world.pipes = [...world.pipes, newPipe];
-      const coin = createCoin(rng, playArea, newPipe.x);
-      world.coins = [...world.coins, { ...coin, y: newPipe.gapY }];
+      // Place the coin directly on the pipe's gap center so it is reachable;
+      // createCoinAt takes the y explicitly, so no rng draw is made and
+      // discarded here.
+      world.coins = [
+        ...world.coins,
+        createCoinAt(playArea, newPipe.x, newPipe.gapY),
+      ];
     }
     world.pipes = cullOffscreen(world.pipes, playArea);
 

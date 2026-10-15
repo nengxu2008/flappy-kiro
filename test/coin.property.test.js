@@ -44,7 +44,9 @@ describe('Property 1: advanceCoins does not mutate its input array or elements',
         fc.array(coinArb, { maxLength: 20 }),
         fc.double({ min: 0, max: 0.05, noNaN: true }),
         (coins, dt) => {
-          const snapshot = JSON.parse(JSON.stringify(coins));
+          // structuredClone preserves -0 (JSON round-tripping does not), so the
+          // non-mutation check stays faithful for signed-zero coordinates.
+          const snapshot = structuredClone(coins);
           const advanced = advanceCoins(coins, dt);
           // Inputs unchanged.
           expect(coins).toEqual(snapshot);
@@ -125,7 +127,9 @@ describe('Property 4: collectCoins flips overlapping coins to collected and coun
       fc.property(fc.array(coinArb, { maxLength: 20 }), (coins) => {
         // A ghost centered on the origin with a 1x1 box.
         const ghost = { x: 0, y: 0, width: 1, height: 1 };
-        const snapshot = JSON.parse(JSON.stringify(coins));
+        // structuredClone preserves -0 (JSON round-tripping does not), so the
+        // non-mutation check stays faithful for signed-zero coordinates.
+        const snapshot = structuredClone(coins);
 
         const { coins: result, gained } = collectCoins(ghost, coins);
 

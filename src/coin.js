@@ -28,14 +28,43 @@ import CONFIG from './config.js';
 import { aabbIntersect } from './collision.js';
 
 /**
- * Create a new Coin as a plain data object (not a class instance). The coin
- * spawns at `spawnX` (just off the right edge, like a pipe) with its vertical
- * center drawn from the injected `rng` within the playable vertical span, so
- * spawns are deterministic under a seeded rng.
+ * Create a new Coin as a plain data object (not a class instance) at an
+ * explicit vertical center `y`. This is the primitive the live wiring uses when
+ * it already knows where the coin should sit (e.g. centered on a pipe's gap),
+ * so no randomness is drawn and discarded.
+ *
+ * The provided `y` is clamped into the playable vertical span
+ *   [COIN_HEIGHT, playArea.height - playArea.groundHeight - COIN_HEIGHT]
+ * so a degenerate play area or an out-of-range request still yields a valid y.
+ *
+ * @param {{ width: number, height: number, groundHeight: number }} playArea
+ * @param {number} spawnX Center-line X where the coin enters, just off-screen.
+ * @param {number} y Requested vertical center, clamped into the playable span.
+ * @returns {{ x: number, y: number, width: number, height: number, collected: boolean }}
+ */
+export function createCoinAt(playArea, spawnX, y) {
+  const minY = CONFIG.COIN_HEIGHT;
+  const maxY = playArea.height - playArea.groundHeight - CONFIG.COIN_HEIGHT;
+  // Clamp into [minY, maxY]; when the span collapses (degenerate play area),
+  // minY wins so y stays well-defined.
+  const clampedY = Math.min(Math.max(y, minY), Math.max(minY, maxY));
+
+  return {
+    x: spawnX,
+    y: clampedY,
+    width: CONFIG.COIN_WIDTH,
+    height: CONFIG.COIN_HEIGHT,
+    collected: false,
+  };
+}
+
+/**
+ * Create a new Coin with its vertical center drawn from the injected `rng`
+ * within the playable vertical span, so spawns are deterministic under a seeded
+ * rng. Delegates to `createCoinAt` for the shared clamping and shape.
  *
  * The y center is drawn uniformly in
- *   [COIN_HEIGHT, playArea.height - playArea.groundHeight - COIN_HEIGHT]
- * then clamped so a degenerate play area still yields a valid y.
+ *   [COIN_HEIGHT, playArea.height - playArea.groundHeight - COIN_HEIGHT].
  *
  * @param {() => number} rng Returns a value in [0, 1) for the spawn height.
  * @param {{ width: number, height: number, groundHeight: number }} playArea
@@ -51,13 +80,7 @@ export function createCoin(rng, playArea, spawnX) {
   const span = Math.max(0, maxY - minY);
   const y = minY + rng() * span;
 
-  return {
-    x: spawnX,
-    y,
-    width: CONFIG.COIN_WIDTH,
-    height: CONFIG.COIN_HEIGHT,
-    collected: false,
-  };
+  return createCoinAt(playArea, spawnX, y);
 }
 
 /**
@@ -146,6 +169,7 @@ export function ghostHitsCoin(ghost, coin) {
 
 export default {
   createCoin,
+  createCoinAt,
   advanceCoins,
   collectCoins,
   cullCoins,
