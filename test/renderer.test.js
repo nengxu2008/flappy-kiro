@@ -21,6 +21,7 @@ const COLOR_BACKGROUND = '#87CEEB';
 const COLOR_PIPE = '#2E8B57';
 const COLOR_GROUND = '#555555';
 const COLOR_GHOST_PLACEHOLDER = '#FFFFFF';
+const COLOR_COIN = '#FFD700';
 
 /**
  * Build a recording mock 2D context. Each drawing method pushes a call record
@@ -55,6 +56,9 @@ function createMockContext() {
     },
     moveTo(x, y) {
       calls.push({ method: 'moveTo', args: [x, y] });
+    },
+    arc(x, y, radius, startAngle, endAngle) {
+      calls.push({ method: 'arc', args: [x, y, radius, startAngle, endAngle], fillStyle: this.fillStyle });
     },
     lineTo(x, y) {
       calls.push({ method: 'lineTo', args: [x, y] });
@@ -106,10 +110,17 @@ function makeSnapshot(overrides = {}) {
     { x: 300, gapY: 300, gapHeight: CONFIG.GAP_HEIGHT, width: CONFIG.PIPE_WIDTH },
     { x: 560, gapY: 220, gapHeight: CONFIG.GAP_HEIGHT, width: CONFIG.PIPE_WIDTH },
   ];
+  // Two active coins plus one collected coin that must not be drawn.
+  const coins = [
+    { x: 300, y: 300, width: CONFIG.COIN_WIDTH, height: CONFIG.COIN_HEIGHT, collected: false },
+    { x: 420, y: 220, width: CONFIG.COIN_WIDTH, height: CONFIG.COIN_HEIGHT, collected: false },
+    { x: 150, y: 180, width: CONFIG.COIN_WIDTH, height: CONFIG.COIN_HEIGHT, collected: true },
+  ];
   return {
     phase: 'playing',
     ghost,
     pipes,
+    coins,
     clouds,
     score: 7,
     highScore: 12,
@@ -177,6 +188,42 @@ describe('renderer.render — recording mock 2D context', () => {
       const [, , width] = rect.args;
       expect(width).toBe(CONFIG.PIPE_WIDTH);
     }
+  });
+
+  it('draws a gold disc for each non-collected coin and skips collected ones', () => {
+    const snapshot = makeSnapshot();
+    render(ctx, snapshot);
+
+    const goldArcs = ctx.calls.filter(
+      (c) => c.method === 'arc' && c.fillStyle === COLOR_COIN,
+    );
+    const activeCoins = snapshot.coins.filter((coin) => !coin.collected);
+    // One arc per non-collected coin; the collected coin is not drawn.
+    expect(goldArcs.length).toBe(activeCoins.length);
+
+    // Each arc is centered on the coin's rounded center with the coin radius.
+    activeCoins.forEach((coin) => {
+      const match = goldArcs.find(
+        (c) => c.args[0] === Math.round(coin.x) && c.args[1] === Math.round(coin.y),
+      );
+      expect(match).toBeDefined();
+      expect(match.args[2]).toBe(Math.min(coin.width, coin.height) / 2);
+    });
+
+    // Coins are drawn inside their own save/restore batch so the gold fillStyle
+    // does not leak into the ground drawn immediately afterward.
+    const groundRect = ctx.calls.find(
+      (c) => c.method === 'fillRect' && c.fillStyle === COLOR_GROUND,
+    );
+    expect(groundRect).toBeDefined();
+  });
+
+  it('draws no coin arcs when the snapshot has no coins', () => {
+    render(ctx, makeSnapshot({ coins: [] }));
+    const goldArcs = ctx.calls.filter(
+      (c) => c.method === 'arc' && c.fillStyle === COLOR_COIN,
+    );
+    expect(goldArcs.length).toBe(0);
   });
 
   it('draws a dark-gray ground strip across the full width at the bottom (R9.9)', () => {

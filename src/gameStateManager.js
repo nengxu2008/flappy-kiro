@@ -47,6 +47,7 @@ import {
   needsSpawn,
 } from './pipeManager.js';
 import { ghostHitsPipe, ghostHitsBounds } from './collision.js';
+import { createCoin, advanceCoins, collectCoins, cullCoins } from './coin.js';
 import { scorePasses, nextHighScore } from './score.js';
 import { advanceClouds, createClouds } from './background.js';
 import {
@@ -134,6 +135,7 @@ export function createGame(deps = {}) {
     phase: PHASES.READY,
     ghost: createGhost(playArea),
     pipes: [],
+    coins: [],
     clouds: clouds.slice(),
     score: 0,
     highScore: safeReadHighScore(),
@@ -165,6 +167,7 @@ export function createGame(deps = {}) {
     world.phase = PHASES.READY;
     world.ghost = createGhost(playArea);
     world.pipes = [];
+    world.coins = [];
     world.score = 0;
     world.gameOverEnteredAt = null;
   }
@@ -180,6 +183,7 @@ export function createGame(deps = {}) {
     world.phase = PHASES.PLAYING;
     world.score = 0;
     world.pipes = [];
+    world.coins = [];
     world.ghost = applyFlap(world.ghost);
     // Seed the first pipe just off the right edge so a gap scrolls into view.
     world.pipes = [spawnPipe(rng, playArea, playArea.width)];
@@ -235,14 +239,19 @@ export function createGame(deps = {}) {
     world.ghost = applyGravity(world.ghost, dt);
     world.ghost = integrate(world.ghost, dt);
 
-    // Scroll, spawn, and cull pipes (R4.1, R4.2, R4.3, R4.6).
+    // Scroll, spawn, and cull pipes (R4.1, R4.2, R4.3, R4.6). A collectible
+    // Coin spawns in lockstep with each new pipe, centered on the pipe's gap so
+    // it is reachable through the gap (bonus scoring).
     world.pipes = advancePipes(world.pipes, dt);
     if (needsSpawn(world.pipes, playArea)) {
       const lastPipeX = world.pipes.reduce(
         (max, pipe) => Math.max(max, pipe.x),
         playArea.width,
       );
-      world.pipes = [...world.pipes, spawnPipe(rng, playArea, lastPipeX)];
+      const newPipe = spawnPipe(rng, playArea, lastPipeX);
+      world.pipes = [...world.pipes, newPipe];
+      const coin = createCoin(rng, playArea, newPipe.x);
+      world.coins = [...world.coins, { ...coin, y: newPipe.gapY }];
     }
     world.pipes = cullOffscreen(world.pipes, playArea);
 
@@ -252,6 +261,19 @@ export function createGame(deps = {}) {
     if (gained > 0) {
       world.score += gained;
     }
+
+    // Scroll, collect, and cull coins. Collecting a coin awards COIN_BONUS
+    // points; coins never cause collision/game-over (bonus scoring).
+    world.coins = advanceCoins(world.coins, dt);
+    const { coins: collectedCoins, gained: coinsGained } = collectCoins(
+      world.ghost,
+      world.coins,
+    );
+    world.coins = collectedCoins;
+    if (coinsGained > 0) {
+      world.score += CONFIG.COIN_BONUS * coinsGained;
+    }
+    world.coins = cullCoins(world.coins);
 
     // Collision ends the game (R5.1-5.3). Collisions are only evaluated while
     // Playing, so Ready/Game_Over never transition on geometry (R5.4).
@@ -317,6 +339,7 @@ export function createGame(deps = {}) {
    *   phase: string,
    *   ghost: object,
    *   pipes: Array<object>,
+   *   coins: Array<object>,
    *   clouds: Array<object>,
    *   score: number,
    *   highScore: number,
@@ -331,6 +354,7 @@ export function createGame(deps = {}) {
       phase: world.phase,
       ghost: Object.freeze({ ...world.ghost }),
       pipes: Object.freeze(world.pipes.map((pipe) => Object.freeze({ ...pipe }))),
+      coins: Object.freeze(world.coins.map((coin) => Object.freeze({ ...coin }))),
       clouds: Object.freeze(
         world.clouds.map((cloud) => Object.freeze({ ...cloud })),
       ),

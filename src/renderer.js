@@ -38,6 +38,8 @@ const COLOR_BACKGROUND = '#87CEEB';
 const COLOR_CLOUD = '#FFFFFF';
 /** Green pipe body, top and bottom segments (R9.8). */
 const COLOR_PIPE = '#2E8B57';
+/** Gold collectible coin (bonus scoring; no sprite asset — drawn as a disc). */
+const COLOR_COIN = '#FFD700';
 /** Dark gray ground strip (R9.9). */
 const COLOR_GROUND = '#555555';
 /** Solid white placeholder when the ghost image is missing (R9.11). */
@@ -145,6 +147,35 @@ function drawPipes(ctx, pipes, playArea) {
       ctx.fillRect(left, gapBottom, pipe.width, bottomHeight);
     }
   }
+}
+
+/**
+ * Draw every collectible Coin as a gold filled disc (there is no coin sprite
+ * asset, so this is the intended graceful default). Center coordinates are
+ * rounded to integers to avoid sub-pixel smoothing. `fillStyle` is set once
+ * before the loop and the whole batch is wrapped in save/restore so the color
+ * does not leak into later draws. Already-collected coins are skipped
+ * defensively (the snapshot normally omits them once culled).
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {Array<{x:number, y:number, width:number, height:number, collected:boolean}>} coins
+ * @returns {void}
+ */
+function drawCoins(ctx, coins) {
+  if (!coins || coins.length === 0) return;
+
+  ctx.save();
+  ctx.fillStyle = COLOR_COIN;
+  for (const coin of coins) {
+    if (coin.collected) continue;
+    const cx = Math.round(coin.x);
+    const cy = Math.round(coin.y);
+    const radius = Math.min(coin.width, coin.height) / 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
 }
 
 /**
@@ -260,6 +291,7 @@ function drawGameOverOverlay(ctx, playArea) {
  *   phase: string,
  *   ghost: {x:number, y:number, width:number, height:number},
  *   pipes: Array<{x:number, gapY:number, gapHeight:number, width:number}>,
+ *   coins: Array<{x:number, y:number, width:number, height:number, collected:boolean}>,
  *   clouds: Array<{x:number, y:number, width:number, height:number, opacity:number}>,
  *   score: number,
  *   highScore: number,
@@ -275,6 +307,7 @@ export function render(ctx, snapshot) {
   drawBackground(ctx, playArea);
   drawClouds(ctx, snapshot.clouds);
   drawPipes(ctx, snapshot.pipes, playArea);
+  drawCoins(ctx, snapshot.coins);
   drawGround(ctx, playArea);
   drawGhost(ctx, snapshot.ghost, snapshot.assets);
   drawScore(ctx, snapshot.score, snapshot.highScore, playArea);

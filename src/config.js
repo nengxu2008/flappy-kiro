@@ -50,6 +50,15 @@ const GAP_HEIGHT = GAP_HEIGHT_FACTOR * GHOST_HEIGHT; // px
 // Pipe body width.
 const PIPE_WIDTH = 60; // px
 
+// --- Coins (collectible bonus) ---
+// Collectible coin size (R: bonus scoring).
+const COIN_WIDTH = 24; // px
+const COIN_HEIGHT = 24; // px
+// Coin scroll speed mirrors PIPE_SPEED so coins drift with the world (R4.1 analog).
+const COIN_SPEED = 120; // px/s (= PIPE_SPEED)
+// Bonus points per coin (R: bonus scoring). Integer.
+const COIN_BONUS = 5;
+
 // --- Clouds (parallax background) ---
 // Per-cloud horizontal speeds: at least two distinct values, all strictly less
 // than PIPE_SPEED (R9.5, R9.6).
@@ -94,6 +103,12 @@ export const CONFIG = Object.freeze({
   GAP_HEIGHT_FACTOR,
   GAP_HEIGHT,
   PIPE_WIDTH,
+
+  // Coins.
+  COIN_WIDTH,
+  COIN_HEIGHT,
+  COIN_SPEED,
+  COIN_BONUS,
 
   // Clouds.
   CLOUD_SPEEDS: Object.freeze([...CLOUD_SPEEDS]),
