@@ -30,22 +30,22 @@ const GHOST_WIDTH = 36;
 const GHOST_HEIGHT = 36;
 
 // --- Physics (per-second constants @ 60 FPS reference) ---
-// Gravity: 0.45 px/frame² × 60 × 60 (R3.1, range 0.3–0.6 px/frame²).
-const GRAVITY = 1620; // px/s²
-// Max downward velocity: 11 px/frame × 60 (R3.3, range 8–15 px/frame).
-const MAX_FALL = 660; // px/s
-// Flap impulse: -8 px/frame × 60 (R2.3). Negative = upward.
-const FLAP_IMPULSE = -480; // px/s
+// Gravity: 0.30 px/frame² × 60 × 60 (R3.1, range 0.3–0.6 px/frame²). Minimum of the range for the gentlest fall.
+const GRAVITY = 1080; // px/s²
+// Max downward velocity: 8 px/frame × 60 (R3.3, range 8–15 px/frame). Minimum of the range for the slowest terminal drop.
+const MAX_FALL = 480; // px/s
+// Flap impulse: -6.5 px/frame × 60 (R2.3). Negative = upward. Softer to match the gentlest gravity.
+const FLAP_IMPULSE = -390; // px/s
 
 // --- Pipes ---
-// Scroll speed (R4.1, range 120–200 px/s).
-const PIPE_SPEED = 160; // px/s
-// Center-to-center horizontal spacing between consecutive pipes (R4.2, 200–350 px).
-const PIPE_SPACING = 260; // px
+// Scroll speed (R4.1, range 120–200 px/s). Minimum of the range for the slowest approach.
+const PIPE_SPEED = 120; // px/s
+// Center-to-center horizontal spacing between consecutive pipes (R4.2, 200–350 px). Maximum of the range for the most recovery room.
+const PIPE_SPACING = 350; // px
 // Vertical margin keeping the gap off both the ceiling and the ground (R4.4, ≥50 px).
 const GAP_MARGIN = 60; // px
-// Gap height factor; GAP_HEIGHT = GAP_HEIGHT_FACTOR × ghost height (R4.5, ≥2×).
-const GAP_HEIGHT_FACTOR = 2.5;
+// Gap height factor; GAP_HEIGHT = GAP_HEIGHT_FACTOR × ghost height (R4.5, ≥2×). Widened further for a much easier gap to clear.
+const GAP_HEIGHT_FACTOR = 4.0;
 const GAP_HEIGHT = GAP_HEIGHT_FACTOR * GHOST_HEIGHT; // px
 // Pipe body width.
 const PIPE_WIDTH = 60; // px

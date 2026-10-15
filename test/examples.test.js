@@ -101,8 +101,10 @@ describe('Example: derived segment boxes bracket the Gap (R4.7)', () => {
     expect(topSegmentBottom).toBeLessThan(bottomSegmentTop);
 
     // The Gap region (gapY ± gapHeight/2) lies strictly between the two
-    // segments and the full Gap fits inside it.
-    expect(bottomSegmentTop - topSegmentBottom).toBe(firstPipe.gapHeight);
+    // segments and the full Gap fits inside it. Use toBeCloseTo: reconstructing
+    // the height from two subtractions accumulates IEEE-754 rounding (57.6 is
+    // not exactly representable), so exact equality is inappropriate for floats.
+    expect(bottomSegmentTop - topSegmentBottom).toBeCloseTo(firstPipe.gapHeight, 9);
 
     // The Gap sits within the Play_Area with at least GAP_MARGIN from both the
     // Ceiling and the Ground (R4.4), so the segments bracket it with the

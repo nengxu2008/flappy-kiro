@@ -146,6 +146,9 @@ describe('Property 11: Offscreen pipes are culled, visible pipes retained', () =
 describe('Property 10: Generated gaps lie within the Play_Area with required margins', () => {
   it('places every generated gap within the margins with the fixed gap height', () => {
     const { GAP_MARGIN, GAP_HEIGHT, playArea, ghost } = CONFIG;
+    // Tolerance for floating-point boundary comparisons (sub-pixel, well below
+    // any gameplay-relevant difference).
+    const EPSILON = 1e-9;
 
     // Ceiling is the top of the Play_Area; the Ground occupies the bottom strip.
     const ceiling = 0;
@@ -169,9 +172,11 @@ describe('Property 10: Generated gaps lie within the Play_Area with required mar
           const gapBottom = pipe.gapY + pipe.gapHeight / 2;
 
           // Gap top edge sits at least GAP_MARGIN below the Ceiling (R4.4).
-          expect(gapTop).toBeGreaterThanOrEqual(ceiling + GAP_MARGIN);
+          // EPSILON absorbs IEEE-754 rounding from the gap-center arithmetic so a
+          // boundary draw (gapTop == GAP_MARGIN) is not rejected for being off by ~1e-14.
+          expect(gapTop).toBeGreaterThanOrEqual(ceiling + GAP_MARGIN - EPSILON);
           // Gap bottom edge sits at least GAP_MARGIN above the Ground top (R4.4).
-          expect(gapBottom).toBeLessThanOrEqual(groundTop - GAP_MARGIN);
+          expect(gapBottom).toBeLessThanOrEqual(groundTop - GAP_MARGIN + EPSILON);
           // Gap height equals the fixed configured value (R4.5).
           expect(pipe.gapHeight).toBe(GAP_HEIGHT);
         }
