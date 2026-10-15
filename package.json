@@ -1,0 +1,15 @@
+{
+  "name": "flappy-kiro",
+  "version": "1.0.0",
+  "description": "Flappy Kiro - a browser-based endless-scroller game built with vanilla JS and the HTML5 Canvas 2D API.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "vitest --run"
+  },
+  "devDependencies": {
+    "fast-check": "^3.23.1",
+    "jsdom": "^25.0.1",
+    "vitest": "^2.1.8"
+  }
+}

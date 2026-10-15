@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flappy Kiro</title>
+    <style>
+      /* Dependency-free styling: no CDN, no build step (R10.1). */
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: #70c5ce; /* light blue to match the game backdrop */
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      }
+
+      /* Centered canvas at the fixed logical resolution (CONFIG.playArea 480x640). */
+      #game {
+        display: block;
+        background: #70c5ce;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+        touch-action: none; /* prevent gesture scrolling on touch flaps */
+      }
+
+      /* The unsupported message stays hidden until main.js reveals it. */
+      [hidden] {
+        display: none !important;
+      }
+
+      #unsupported {
+        max-width: 480px;
+        padding: 24px;
+        color: #ffffff;
+        background: #d9534f;
+        border-radius: 8px;
+        text-align: center;
+        font-size: 18px;
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Fixed logical play area: 480x640 (matches CONFIG.playArea). -->
+    <canvas id="game" width="480" height="640"></canvas>
+
+    <!--
+      Hidden "unsupported browser" message. main.js reveals it (removes the
+      hidden attribute / sets display:block) when the 2D canvas context or
+      requestAnimationFrame is unavailable (R10.5).
+    -->
+    <div id="unsupported" hidden>
+      Your browser is unsupported. Flappy Kiro needs a modern browser with
+      HTML5 Canvas and animation support to play.
+    </div>
+
+    <!-- Module entry point. References assets/ghosty.png, assets/jump.wav,
+         assets/game_over.wav through the src modules. -->
+    <script type="module" src="src/main.js"></script>
+  </body>
+</html>
